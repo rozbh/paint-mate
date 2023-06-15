@@ -12,7 +12,18 @@ app.use(helmet())
 app.use(logHandler)
 
 app.get('/', catchAsync(async (req: Request, res: Response) => {
-    res.send('im run bruh')
+    res.send([
+        [25,45],
+        [25,46],
+        [25,47],
+        [25,48],
+        [25,49],
+        [25,50],
+        [26,50],
+        [26,50],
+        [26,50],
+        [26,50],
+    ])
 }))
 
 

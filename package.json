@@ -103,6 +103,7 @@
     "shebang-command": "^2.0.0",
     "shebang-regex": "^3.0.0",
     "slice-ansi": "^4.0.0",
+    "socket.io": "^4.6.2",
     "sprintf-js": "^1.0.3",
     "string-width": "^4.2.3",
     "strip-ansi": "^6.0.1",

@@ -1,9 +1,11 @@
 import { Server, Socket } from "socket.io";
 import { getPub } from "../controllers/socket.io/publisher.socket";
-import { getpubEvent } from "../events/socket.io/get-pub.event";
+import { generalEvent } from "../events/socket.io/general.event";
+import { clear } from "../controllers/socket.io/clear.socket";
 
-export function eventsLoader(io: Server, socket: Socket) {
+export async function eventsLoader(io: Server, socket: Socket) {
     return [
-        getpubEvent({ eventPath: 'get-pub', socket, controller: getPub }),
+        await generalEvent({ eventPath: 'get-pub', socket, controller: getPub }),
+        await generalEvent({ eventPath: 'clear', socket, controller: clear }),
     ]
 }

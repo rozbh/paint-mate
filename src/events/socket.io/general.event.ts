@@ -1,8 +1,7 @@
 import { Eventfunction } from "../../utils/Ievent"
-export function getpubEvent(input: Eventfunction) {
+export async function generalEvent(input: Eventfunction) {
     const { socket, controller, eventPath } = input
     socket.on(eventPath, async (msg,ack) => {
-        
-        return controller(socket, msg,ack)
+        return await controller(socket, msg,ack)
     })
 }

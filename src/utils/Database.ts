@@ -1,16 +1,18 @@
 import mongoose from 'mongoose'
 import logger from '../middleware/logger'
-const database = () => {
-    const url = process.env.MONGO_URL ?? 'mongodb://localhost:21017/test'
-    return new Promise((resolve, reject) => {
-        mongoose.connect(url, (err) => {
-            if (err) {
-                reject(err)
-                return logger.error(err)
-            }
-            resolve('mongodb connected')
-            logger.info('mongodb connected')
-        })
-    })
+import { RedisClientType, createClient } from 'redis'
+const database = async () => {
+    const url = process.env.REDIS
+    const client = createClient({
+        url
+    });
+    client.on('error', err => console.log('Redis Client Error', err));
+    await client.connect();
+    const rs = await client.get('paint')
+    if (rs == null) {
+        await client.set('paint', JSON.stringify([]))
+    }
+
+    return client as RedisClientType
 }
 export default database

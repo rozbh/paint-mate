@@ -4,6 +4,7 @@ import dotenv from 'dotenv'
 import logger from './middleware/logger'
 import { Server, Socket } from "socket.io";
 import { eventsLoader } from './utils/eventLoader';
+import database from './utils/Database';
 
 dotenv.config()
 const server = http.createServer(app)
@@ -23,7 +24,7 @@ io.on('connection', (socket: Socket) => {
     });
 });
 server.listen(process.env.PORT, async () => {
-    // await database()
+    await database()
     logger.info(`Server Up And Run On Port: ${process.env.PORT}`)
 })
 

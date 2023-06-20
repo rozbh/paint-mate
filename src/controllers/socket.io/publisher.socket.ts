@@ -2,8 +2,6 @@
 import { Socket } from "socket.io";
 import database from "../../utils/Database";
 import { PaintInterface } from "../../utils/Ipaint";
-import { customValidator } from "../../utils/validator";
-import { paintValidator } from "../../utils/paintValidate";
 import { paintsschema, paintsschemaDb } from "../../utils/joi";
 export async function getPub(socket: Socket, msg: PaintInterface[], ack: any) {
 

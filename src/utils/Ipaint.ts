@@ -2,5 +2,7 @@ export interface PaintInterface {
     x: number,
     y: number,
     color: string,
-    lineWidth: number
+    lineWidth: number,
+    beginPath:boolean,
+    closePath:boolean
 } 

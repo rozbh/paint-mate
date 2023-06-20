@@ -11,9 +11,9 @@ const paintSchema = Joi.object({
         .required(),
     color: Joi.string().regex(/^#[A-Fa-f0-9]{6}$/).required(),
     
-    lineWidth: Joi.number().min(1).max(10),
-    beginPath: Joi.boolean(),
-    closePath:Joi.boolean()
+    lineWidth: Joi.number().min(1).max(30),
+    beginPath: Joi.boolean().required(),
+    closePath:Joi.boolean().required()
 } )
 
 export const paintsschema = Joi.array().min(1).items(paintSchema).required()

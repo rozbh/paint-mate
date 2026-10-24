@@ -7,11 +7,16 @@ import { PaintStore } from './services/PaintStore'
 import { registerSocketHandlers } from './socket'
 import { connectRedis } from './utils/Database'
 
+// How long shutdown waits for unsaved strokes to reach redis
+const SHUTDOWN_TIMEOUT_MS = 5000
+
 async function main() {
     const redis = await connectRedis()
     const store = new PaintStore(redis)
-    const migrated = await store.migrateLegacy()
-    if (migrated) logger.info(`Migrated ${migrated} points from the old storage format`)
+    const loaded = await store.load()
+    logger.info(`Loaded ${loaded.points} points`)
+    if (loaded.rewritten) logger.info('Converted stored canvas to the current format')
+    if (loaded.corrupt) logger.warn(`Moved ${loaded.corrupt} unreadable entries to the backup list`)
 
     const server = http.createServer(createApp(store))
     const io = new Server(server, {
@@ -25,8 +30,13 @@ async function main() {
 
     const shutdown = async () => {
         logger.info('Shutting down')
-        await store.flushAll()
+        // Closing io disconnects everyone, which flushes their half-drawn strokes
         await io.close()
+        store.flushAll()
+        const timeout = new Promise<'timeout'>((resolve) => setTimeout(resolve, SHUTDOWN_TIMEOUT_MS, 'timeout'))
+        if (await Promise.race([store.idle(), timeout]) === 'timeout') {
+            logger.error('Redis unreachable, some strokes were not saved')
+        }
         await redis.close()
         process.exit(0)
     }

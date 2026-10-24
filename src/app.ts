@@ -17,8 +17,8 @@ export function createApp(store: PaintStore) {
     app.use(compression())
     app.use(logHandler)
 
-    app.get('/', async (req: Request, res: Response) => {
-        res.send(await store.getAll())
+    app.get('/', (req: Request, res: Response) => {
+        res.type('json').send(store.canvasJson())
     })
 
     app.use(() => {

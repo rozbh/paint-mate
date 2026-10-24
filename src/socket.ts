@@ -12,7 +12,7 @@ export function registerSocketHandlers(io: Server, store: PaintStore) {
         socket.on('disconnect', () => {
             logger.debug(`disconnected ${socket.id}`)
             // Keep a half-finished stroke if the tab closed mid-draw
-            store.flush(socket.id).catch((err) => logger.error(`flush failed: ${err.message}`))
+            store.flush(socket.id)
         })
     })
 }

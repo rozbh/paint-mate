@@ -1,7 +1,7 @@
 import Joi from 'joi'
 import { PaintInterface } from './Ipaint'
 
-const paintSchema = Joi.object<PaintInterface>({
+export const paintSchema = Joi.object<PaintInterface>({
     // Negative values happen when a stroke is dragged past the canvas edge
     x: Joi.number().min(-100000).max(100000).required(),
     y: Joi.number().min(-100000).max(100000).required(),

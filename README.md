@@ -27,10 +27,20 @@ Socket.IO path is `/ws`. A point is
 
 ## Storage
 
-Each finished stroke (from `beginPath` to `closePath`) is one element of the
-Redis list `paint:strokes`. Strokes are buffered per connection until they end,
-so two people drawing at once never get their points mixed together. Data in
-the old single `paint` key is migrated automatically on startup.
+The canvas is kept in memory while the server runs, so `GET /` never waits on
+Redis. Redis holds the durable copy: the list `paint:strokes`, one element per
+finished stroke (from `beginPath` to `closePath`), stored compactly with color
+and line width written once per stroke.
+
+- Strokes are buffered per connection until they end, so two people drawing at
+  once never get their points mixed together.
+- Redis writes go through one ordered queue that retries with backoff, so a
+  Redis outage delays saving instead of losing strokes or slowing drawing.
+- On startup, older formats (the single `paint` key, plain point arrays) are
+  converted in one transaction. Unreadable entries are moved to
+  `paint:strokes:corrupt` instead of being deleted.
+
+Logs rotate daily under `Logs/` and are kept for 14 days.
 
 ## Scripts
 

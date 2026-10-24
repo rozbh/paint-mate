@@ -1,31 +1,24 @@
+import { Socket } from 'socket.io'
+import logger from '../../middleware/logger'
+import { PaintStore } from '../../services/PaintStore'
+import { Ack } from '../../utils/Ipaint'
+import { validatePaints } from '../../utils/joi'
 
-import { Socket } from "socket.io";
-import database from "../../utils/Database";
-import { PaintInterface } from "../../utils/Ipaint";
-import { paintsschema, paintsschemaDb } from "../../utils/joi";
-export async function getPub(socket: Socket, msg: PaintInterface[], ack: any) {
-
-  const client = await database()
-  const paintsDataStr = await client.get('paint')
-  const result = paintsschema.validate(msg);
-  if (result.error) {
-    if (typeof ack == 'function') {
-      return ack(result.error)
-    }
-  }
-  if (paintsDataStr) {
-    const paints = JSON.parse(paintsDataStr) as PaintInterface[]
-
-    const result = paintsschemaDb.validate(paints);
-    if (result.error) {
-      await client.del('paint')
-    }
-    await client.set('paint', JSON.stringify([...paints, ...msg]));
-    socket.broadcast.emit('update', msg)
-    if (typeof ack == 'function') {
-      ack(msg)
-    }
+export async function getPub(store: PaintStore, socket: Socket, msg: unknown, ack?: Ack) {
+  const { error, value } = validatePaints(msg)
+  if (error) {
+    logger.warn(`get-pub rejected from ${socket.id}: ${error.message}`)
+    return typeof ack == 'function' && ack(error)
   }
 
-  //return  socket.to(msg.roomId).emit("newMsg", msg.caption);
+  // Send to the partner first; saving must never delay the live drawing
+  socket.broadcast.emit('update', value)
+  try {
+    await store.add(socket.id, value)
+  } catch (err) {
+    logger.error(`get-pub save failed: ${(err as Error).message}`)
+  }
+  if (typeof ack == 'function') {
+    ack(value)
+  }
 }

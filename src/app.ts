@@ -1,33 +1,31 @@
+import compression from 'compression'
+import cors from 'cors'
 import express, { Request, Response } from 'express'
 import helmet from 'helmet'
-import catchAsync from './middleware/catchAsync'
+import { StatusCodes, getReasonPhrase } from 'http-status-codes'
 import errorHandler from './middleware/errorHandler'
 import logHandler from './middleware/logHandler'
+import { PaintStore } from './services/PaintStore'
 import ApiErr from './utils/ApiErr'
-import cors from 'cors'
 
-import { StatusCodes, getReasonPhrase } from 'http-status-codes'
-import database from './utils/Database'
-const app = express()
-app.use(express.json())
-app.use(helmet())
-app.use(logHandler)
-app.use(cors())
+export function createApp(store: PaintStore) {
+    const app = express()
+    // The canvas is fetched from the front end's origin, so allow cross-origin reads
+    app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }))
+    app.use(cors())
+    // Point arrays are very repetitive JSON; gzip shrinks the initial load a lot
+    app.use(compression())
+    app.use(logHandler)
 
-app.get('/', catchAsync(async (req: Request, res: Response) => {
+    app.get('/', async (req: Request, res: Response) => {
+        res.send(await store.getAll())
+    })
 
-    const client = await database()
-    const paintsDataStr = await client.get('paint')
-    if (paintsDataStr) {
-        return res.send(JSON.parse(paintsDataStr))
-    }
-   return res.send([])
-}))
+    app.use(() => {
+        throw new ApiErr(StatusCodes.NOT_FOUND, getReasonPhrase(StatusCodes.NOT_FOUND))
+    })
 
-app.use(() => {
-    throw new ApiErr(StatusCodes.NOT_FOUND, getReasonPhrase(StatusCodes.NOT_FOUND))
-})
+    app.use(errorHandler)
 
-app.use(errorHandler)
-
-export default app
+    return app
+}

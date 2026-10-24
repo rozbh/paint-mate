@@ -1,13 +1,18 @@
-import { Socket } from "socket.io";
-import database from "../../utils/Database";
-import { PaintInterface } from "../../utils/Ipaint";
+import { Socket } from 'socket.io'
+import logger from '../../middleware/logger'
+import { PaintStore } from '../../services/PaintStore'
+import { Ack } from '../../utils/Ipaint'
 
-export async function clear(socket: Socket, msg: PaintInterface[], ack: any) {
-    const client = await database()
-    client.set('paint', JSON.stringify([]));
-    socket.broadcast.emit('clear',msg)
-    if (typeof ack == 'function') {
-      ack('done')
-    }
-    //return  socket.to(msg.roomId).emit("newMsg", msg.caption);
+export async function clear(store: PaintStore, socket: Socket, msg: unknown, ack?: Ack) {
+  // store.clear() sends DEL synchronously, before any later stroke can be pushed
+  const cleared = store.clear()
+  socket.broadcast.emit('clear', msg)
+  try {
+    await cleared
+  } catch (err) {
+    logger.error(`clear failed: ${(err as Error).message}`)
   }
+  if (typeof ack == 'function') {
+    ack('done')
+  }
+}

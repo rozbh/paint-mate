@@ -1,18 +1,11 @@
-import mongoose from 'mongoose'
+import { createClient } from 'redis'
 import logger from '../middleware/logger'
-import { RedisClientType, createClient } from 'redis'
-const database = async () => {
-    const url = process.env.REDIS
-    const client = createClient({
-        url
-    });
-    client.on('error', err => console.log('Redis Client Error', err));
-    await client.connect();
-    const rs = await client.get('paint')
-    if (rs == null) {
-        await client.set('paint', JSON.stringify([]))
-    }
 
-    return client as RedisClientType
+// One shared connection for the whole process. Commands on a single connection
+// run in the order they were sent, which keeps clear/draw events ordered.
+export async function connectRedis(url = process.env.REDIS_URL) {
+    const client = createClient({ url })
+    client.on('error', (err) => logger.error(`Redis: ${err.message}`))
+    await client.connect()
+    return client
 }
-export default database
